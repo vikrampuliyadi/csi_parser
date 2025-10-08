@@ -7,7 +7,8 @@ from fastapi import APIRouter, File, UploadFile, HTTPException
 from app.models.schemas import ParseResponse, ParseResultItem, DocumentMeta, Position
 from app.services.pdf_parser import PDFParser
 from app.services.matcher import find_matches, compute_confidence
-from app.utils.text import normalize_text, window
+from app.utils.spec_section import SectionResolver
+from app.utils.text import normalize_text_with_mapping, window
 from app.utils.keywords import SNIPPET_WINDOW, PROXIMITY_CHAR_WINDOW
 
 router = APIRouter()
@@ -28,19 +29,27 @@ async def parse(file: UploadFile = File(...)):
     # Do this once so we don't call into PyMuPDF twice later
     num_pages = parser.num_pages()
 
+    section_seed = None
+
     for page_num, page_text, section_hint in parser.iter_pages():
-        ntext = normalize_text(page_text)
+        ntext, index_map, canonical = normalize_text_with_mapping(page_text)
+        section_resolver = SectionResolver(canonical, seed_state=section_seed)
         matches = find_matches(ntext)
         for keyword_or_pattern, match_type, positions in matches:
             for start, end in positions:
                 pre, snip, post = window(ntext, start, end, before=SNIPPET_WINDOW, after=SNIPPET_WINDOW)
                 context_window = f"{pre}{snip}{post}"
                 confidence = compute_confidence(ntext, start, end, match_type)
+                source_index = index_map[start] if 0 <= start < len(index_map) else None
+                spec_section = (
+                    section_resolver.resolve(source_index) if source_index is not None else None
+                )
                 results.append(
                     ParseResultItem(
                         keyword=keyword_or_pattern,
                         page=page_num,
                         section_hint=section_hint or None,
+                        spec_section=spec_section,
                         snippet=snip,
                         context_before=pre,
                         context_after=post,
@@ -51,6 +60,7 @@ async def parse(file: UploadFile = File(...)):
                         proximity_window=PROXIMITY_CHAR_WINDOW,
                     )
                 )
+        section_seed = section_resolver.tail_state()
 
     elapsed_ms = int((time.time() - t0) * 1000)
 

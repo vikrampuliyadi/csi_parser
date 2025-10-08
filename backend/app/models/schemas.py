@@ -11,6 +11,7 @@ class ParseResultItem(BaseModel):
     keyword: str
     page: int
     section_hint: Optional[str] = None
+    spec_section: Optional[str] = None
     snippet: str
     context_before: str
     context_after: str
