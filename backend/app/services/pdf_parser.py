@@ -1,7 +1,10 @@
 # app/services/pdf_parser.py
 import time
+import re
 from typing import Dict, Generator, Tuple, Iterable
 import fitz  # PyMuPDF
+
+SECTION_LINE_PATTERN = re.compile(r"\b\d{2}\s\d{2}\s\d{2}\b")
 
 class PDFParser:
     def __init__(self, pdf_bytes: bytes):
@@ -19,9 +22,9 @@ class PDFParser:
                 # naive section header heuristic
                 lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
                 for ln in lines[:8]:
-                    if len(ln) < 120 and (
-                        "PART 1" in ln or "PART 2" in ln or "PART 3" in ln or any(c.isdigit() for c in ln)
-                    ):
+                    if len(ln) >= 120:
+                        continue
+                    if SECTION_LINE_PATTERN.search(ln):
                         last_section = ln
                         break
                 yield (i + 1, text, last_section)
