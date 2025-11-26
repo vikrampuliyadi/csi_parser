@@ -1,6 +1,24 @@
 # CSI Parse MVP
 
-## Backend (FastAPI)
+## Quick Start
+
+Start both services with one command:
+
+```bash
+./start.sh
+```
+
+Stop both services:
+
+```bash
+./stop.sh
+```
+
+---
+
+## Manual Setup
+
+### Backend (FastAPI)
 
 Prereqs: Python 3.10+
 
