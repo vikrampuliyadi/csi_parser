@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.database import init_db
 from app.routers.health import router as health_router
 from app.routers.parse import router as parse_router
 
@@ -13,6 +14,11 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+
+# Initialize database on startup
+@app.on_event("startup")
+async def startup_event():
+    init_db()
 
 app.include_router(health_router, prefix='/api/v1')
 app.include_router(parse_router, prefix='/api/v1')

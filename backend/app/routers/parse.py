@@ -1,20 +1,30 @@
 # app/routers/parse.py
+import json
 import time
 from typing import List
 
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
+from sqlalchemy.orm import Session
 
+from app.database import get_db
+from app.models.db_models import User, ParseResult
 from app.models.schemas import ParseResponse, ParseResultItem, DocumentMeta, Position
 from app.services.pdf_parser import PDFParser
 from app.services.matcher import find_matches, compute_confidence
 from app.utils.spec_section import SectionResolver
 from app.utils.text import normalize_text_with_mapping, window
 from app.utils.keywords import SNIPPET_WINDOW, PROXIMITY_CHAR_WINDOW
+from app.utils.auth import get_current_user
 
 router = APIRouter()
 
 @router.post("/parse", response_model=ParseResponse)
-async def parse(file: UploadFile = File(...)):
+async def parse(
+    file: UploadFile = File(...),
+    save: bool = False,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
+):
     if file.content_type not in ("application/pdf", "application/octet-stream"):
         raise HTTPException(status_code=400, detail="File must be a PDF")
 
@@ -63,17 +73,41 @@ async def parse(file: UploadFile = File(...)):
         section_seed = section_resolver.tail_state()
 
     elapsed_ms = int((time.time() - t0) * 1000)
+    
+    matched_pages = len({r.page for r in results})
+    total_matches = len(results)
+    filename = file.filename or "document.pdf"
 
-    return ParseResponse(
+    response = ParseResponse(
         document=DocumentMeta(
-            filename=file.filename or "document.pdf",
+            filename=filename,
             num_pages=num_pages,
             parse_time_ms=elapsed_ms,
         ),
         results=results,
         meta={
-            "matched_pages": len({r.page for r in results}),
-            "total_matches": len(results),
+            "matched_pages": matched_pages,
+            "total_matches": total_matches,
             "keywords_used": None,
         },
+        result_id=None,
     )
+
+    # Save to database if requested
+    if save:
+        results_json = json.dumps([r.model_dump() for r in results])
+        db_result = ParseResult(
+            user_id=current_user.id,
+            filename=filename,
+            num_pages=num_pages,
+            parse_time_ms=elapsed_ms,
+            total_matches=total_matches,
+            matched_pages=matched_pages,
+            results_json=results_json,
+        )
+        db.add(db_result)
+        db.commit()
+        db.refresh(db_result)
+        response.result_id = db_result.id
+
+    return response
