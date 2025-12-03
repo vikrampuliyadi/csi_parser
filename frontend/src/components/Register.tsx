@@ -1,13 +1,10 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { register, login, setToken } from '../utils/auth'
 import '../styles/Register.css'
 
-interface RegisterProps {
-  onSuccess: () => void
-  onSwitchToLogin: () => void
-}
-
-export default function Register({ onSuccess, onSwitchToLogin }: RegisterProps) {
+export default function Register() {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -35,7 +32,7 @@ export default function Register({ onSuccess, onSwitchToLogin }: RegisterProps) 
       // Automatically log in after registration
       const tokenResponse = await login({ email, password })
       setToken(tokenResponse.access_token)
-      onSuccess()
+      navigate('/parse')
     } catch (err: any) {
       setError(err.message || 'Registration failed')
     } finally {
@@ -97,7 +94,7 @@ export default function Register({ onSuccess, onSwitchToLogin }: RegisterProps) 
       </form>
       <div className="register-switch-container">
         <button
-          onClick={onSwitchToLogin}
+          onClick={() => navigate('/login')}
           className="register-switch-button"
         >
           Already have an account? Login

@@ -1,14 +1,17 @@
 import { useState } from 'react'
-import { getToken } from '../utils/auth'
+import { useNavigate } from 'react-router-dom'
+import { getToken, removeToken } from '../utils/auth'
 import '../styles/ParseScreen.css'
 
 const API_BASE = (import.meta as any).env.VITE_API_BASE || 'http://127.0.0.1:8000/api/v1'
 
-interface ParseScreenProps {
-  onLogout: () => void
-}
+export default function ParseScreen() {
+  const navigate = useNavigate()
 
-export default function ParseScreen({ onLogout }: ParseScreenProps) {
+  const handleLogout = () => {
+    removeToken()
+    navigate('/login')
+  }
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -55,7 +58,7 @@ export default function ParseScreen({ onLogout }: ParseScreenProps) {
       <div className="parse-header">
         <h1>CSI Parse</h1>
         <button
-          onClick={onLogout}
+          onClick={handleLogout}
           className="parse-logout-button"
         >
           Logout
