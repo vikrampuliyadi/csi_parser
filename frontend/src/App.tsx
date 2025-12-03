@@ -40,7 +40,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div style={{ maxWidth: 900, margin: '0 auto', padding: 16, textAlign: 'center' }}>
+      <div className="loading-container">
         <p>Loading...</p>
       </div>
     )
@@ -60,35 +60,19 @@ export default function App() {
 
   // Landing page with buttons
   return (
-    <div style={{ maxWidth: 400, margin: '0 auto', padding: '2rem', textAlign: 'center' }}>
+    <div className="landing-container">
       <h1>CSI Parse</h1>
-      <p style={{ marginBottom: '2rem', color: '#666' }}>Please sign in to continue</p>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <p className="landing-subtitle">Please sign in to continue</p>
+      <div className="landing-buttons">
         <button
           onClick={() => setAuthView('login')}
-          style={{
-            padding: '0.75rem 1.5rem',
-            fontSize: '1rem',
-            backgroundColor: '#646cff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
+          className="landing-button-primary"
         >
           Login
         </button>
         <button
           onClick={() => setAuthView('register')}
-          style={{
-            padding: '0.75rem 1.5rem',
-            fontSize: '1rem',
-            backgroundColor: 'transparent',
-            color: '#646cff',
-            border: '1px solid #646cff',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
+          className="landing-button-secondary"
         >
           Register
         </button>

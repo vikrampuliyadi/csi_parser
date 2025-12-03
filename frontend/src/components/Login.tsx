@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { login, setToken } from '../utils/auth'
+import '../styles/Login.css'
 
 interface LoginProps {
   onSuccess: () => void
@@ -29,11 +30,11 @@ export default function Login({ onSuccess, onSwitchToRegister }: LoginProps) {
   }
 
   return (
-    <div style={{ maxWidth: 400, margin: '0 auto', padding: '2rem' }}>
+    <div className="login-container">
       <h2>Login</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <form onSubmit={handleSubmit} className="login-form">
         <div>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem' }}>
+          <label htmlFor="email" className="login-form-group">
             Email
           </label>
           <input
@@ -42,11 +43,11 @@ export default function Login({ onSuccess, onSwitchToRegister }: LoginProps) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{ width: '100%', padding: '0.5rem', fontSize: '1rem' }}
+            className="login-input"
           />
         </div>
         <div>
-          <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem' }}>
+          <label htmlFor="password" className="login-form-group">
             Password
           </label>
           <input
@@ -55,36 +56,22 @@ export default function Login({ onSuccess, onSwitchToRegister }: LoginProps) {
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{ width: '100%', padding: '0.5rem', fontSize: '1rem' }}
+            className="login-input"
           />
         </div>
-        {error && <div style={{ color: '#b00020' }}>{error}</div>}
+        {error && <div className="login-error">{error}</div>}
         <button
           type="submit"
           disabled={loading}
-          style={{
-            padding: '0.75rem',
-            fontSize: '1rem',
-            backgroundColor: '#646cff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-          }}
+          className="login-button"
         >
           {loading ? 'Logging in...' : 'Login'}
         </button>
       </form>
-      <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+      <div className="login-switch-container">
         <button
           onClick={onSwitchToRegister}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#646cff',
-            cursor: 'pointer',
-            textDecoration: 'underline',
-          }}
+          className="login-switch-button"
         >
           Don't have an account? Register
         </button>

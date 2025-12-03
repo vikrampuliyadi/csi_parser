@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { getToken } from '../utils/auth'
+import '../styles/ParseScreen.css'
 
 const API_BASE = (import.meta as any).env.VITE_API_BASE || 'http://127.0.0.1:8000/api/v1'
 
@@ -50,43 +51,26 @@ export default function ParseScreen({ onLogout }: ParseScreenProps) {
   }
 
   return (
-    <div style={{ maxWidth: 900, margin: '0 auto', padding: 16 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+    <div className="parse-container">
+      <div className="parse-header">
         <h1>CSI Parse</h1>
         <button
           onClick={onLogout}
-          style={{
-            padding: '0.5rem 1rem',
-            backgroundColor: '#b00020',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: 'pointer',
-          }}
+          className="parse-logout-button"
         >
           Logout
         </button>
       </div>
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginBottom: 12 }}>
+      <div className="parse-controls">
         <input type="file" accept="application/pdf" onChange={onChange} />
         <button disabled={!file || loading} onClick={onParse}>
           {loading ? 'Parsing…' : 'Parse'}
         </button>
         {file && <span>{file.name}</span>}
       </div>
-      {error && <div style={{ color: '#b00020', marginBottom: 12 }}>{error}</div>}
+      {error && <div className="parse-error">{error}</div>}
       {result && (
-        <pre
-          style={{
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-            border: '1px solid #ddd',
-            padding: 12,
-            borderRadius: 4,
-            maxHeight: '70vh',
-            overflow: 'auto',
-          }}
-        >
+        <pre className="parse-result">
           {JSON.stringify(result, null, 2)}
         </pre>
       )}

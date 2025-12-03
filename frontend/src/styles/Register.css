@@ -1,0 +1,53 @@
+.register-container {
+  max-width: 400px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.register-form-group {
+  display: block;
+  margin-bottom: 0.5rem;
+}
+
+.register-input {
+  width: 100%;
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+
+.register-error {
+  color: #b00020;
+}
+
+.register-button {
+  padding: 0.75rem;
+  font-size: 1rem;
+  background-color: #646cff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.register-button:disabled {
+  cursor: not-allowed;
+}
+
+.register-switch-container {
+  margin-top: 1rem;
+  text-align: center;
+}
+
+.register-switch-button {
+  background: none;
+  border: none;
+  color: #646cff;
+  cursor: pointer;
+  text-decoration: underline;
+}

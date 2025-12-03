@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { register, login, setToken } from '../utils/auth'
+import '../styles/Register.css'
 
 interface RegisterProps {
   onSuccess: () => void
@@ -43,11 +44,11 @@ export default function Register({ onSuccess, onSwitchToLogin }: RegisterProps) 
   }
 
   return (
-    <div style={{ maxWidth: 400, margin: '0 auto', padding: '2rem' }}>
+    <div className="register-container">
       <h2>Register</h2>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+      <form onSubmit={handleSubmit} className="register-form">
         <div>
-          <label htmlFor="email" style={{ display: 'block', marginBottom: '0.5rem' }}>
+          <label htmlFor="email" className="register-form-group">
             Email
           </label>
           <input
@@ -56,11 +57,11 @@ export default function Register({ onSuccess, onSwitchToLogin }: RegisterProps) 
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{ width: '100%', padding: '0.5rem', fontSize: '1rem' }}
+            className="register-input"
           />
         </div>
         <div>
-          <label htmlFor="password" style={{ display: 'block', marginBottom: '0.5rem' }}>
+          <label htmlFor="password" className="register-form-group">
             Password
           </label>
           <input
@@ -69,11 +70,11 @@ export default function Register({ onSuccess, onSwitchToLogin }: RegisterProps) 
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            style={{ width: '100%', padding: '0.5rem', fontSize: '1rem' }}
+            className="register-input"
           />
         </div>
         <div>
-          <label htmlFor="confirmPassword" style={{ display: 'block', marginBottom: '0.5rem' }}>
+          <label htmlFor="confirmPassword" className="register-form-group">
             Confirm Password
           </label>
           <input
@@ -82,36 +83,22 @@ export default function Register({ onSuccess, onSwitchToLogin }: RegisterProps) 
             value={confirmPassword}
             onChange={(e) => setConfirmPassword(e.target.value)}
             required
-            style={{ width: '100%', padding: '0.5rem', fontSize: '1rem' }}
+            className="register-input"
           />
         </div>
-        {error && <div style={{ color: '#b00020' }}>{error}</div>}
+        {error && <div className="register-error">{error}</div>}
         <button
           type="submit"
           disabled={loading}
-          style={{
-            padding: '0.75rem',
-            fontSize: '1rem',
-            backgroundColor: '#646cff',
-            color: 'white',
-            border: 'none',
-            borderRadius: '4px',
-            cursor: loading ? 'not-allowed' : 'pointer',
-          }}
+          className="register-button"
         >
           {loading ? 'Registering...' : 'Register'}
         </button>
       </form>
-      <div style={{ marginTop: '1rem', textAlign: 'center' }}>
+      <div className="register-switch-container">
         <button
           onClick={onSwitchToLogin}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: '#646cff',
-            cursor: 'pointer',
-            textDecoration: 'underline',
-          }}
+          className="register-switch-button"
         >
           Already have an account? Login
         </button>
