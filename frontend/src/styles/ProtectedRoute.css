@@ -1,0 +1,8 @@
+/* ProtectedRoute uses the same loading styles as App */
+.loading-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+  text-align: center;
+}
+

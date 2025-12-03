@@ -1,0 +1,43 @@
+.parse-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 16px;
+}
+
+.parse-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.parse-logout-button {
+  padding: 0.5rem 1rem;
+  background-color: #b00020;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.parse-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.parse-error {
+  color: #b00020;
+  margin-bottom: 12px;
+}
+
+.parse-result {
+  white-space: pre-wrap;
+  word-break: break-word;
+  border: 1px solid #ddd;
+  padding: 12px;
+  border-radius: 4px;
+  max-height: 70vh;
+  overflow: auto;
+}
