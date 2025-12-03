@@ -1,5 +1,6 @@
 """Authentication utilities for JWT tokens and password hashing."""
 
+import os
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 from jose import JWTError, jwt
@@ -18,7 +19,13 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
 
 # JWT settings
-SECRET_KEY = "your-secret-key-change-in-production"  # TODO: Move to environment variable
+SECRET_KEY = os.getenv("SECRET_KEY", "your-secret-key-change-in-production")
+if SECRET_KEY == "your-secret-key-change-in-production":
+    import warnings
+    warnings.warn(
+        "Using default SECRET_KEY. Set SECRET_KEY environment variable for production!",
+        UserWarning
+    )
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_HOURS = 24
 
