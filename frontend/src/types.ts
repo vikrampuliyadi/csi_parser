@@ -25,4 +25,20 @@ export type ParseResponse = {
   document: DocumentMeta
   results: ParseResultItem[]
   meta: Record<string, any>
+  result_id?: number
+}
+
+export type ParseResultSummary = {
+  id: number
+  filename: string
+  num_pages: number
+  total_matches: number
+  matched_pages: number
+  parse_time_ms: number
+  created_at: string // ISO datetime string
+}
+
+export type ParseResultDetail = ParseResultSummary & {
+  results: ParseResultItem[]
+  meta: Record<string, any>
 }
