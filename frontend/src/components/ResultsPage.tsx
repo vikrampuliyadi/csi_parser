@@ -135,12 +135,20 @@ export default function ResultsPage() {
     <div className="results-page-container">
       <div className="results-page-header">
         <h1>Parse Results</h1>
-        <button
-          onClick={() => navigate('/parse')}
-          className="results-page-button results-page-button-primary"
-        >
-          Back to Parse
-        </button>
+        <div className="results-page-header-actions">
+          <button
+            onClick={() => navigate('/results')}
+            className="results-page-button"
+          >
+            All Results
+          </button>
+          <button
+            onClick={() => navigate('/parse')}
+            className="results-page-button results-page-button-primary"
+          >
+            Back to Parse
+          </button>
+        </div>
       </div>
 
       {/* Document Metadata */}

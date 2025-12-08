@@ -5,6 +5,7 @@ import Login from './components/Login'
 import Register from './components/Register'
 import ParseScreen from './components/ParseScreen'
 import ResultsPage from './components/ResultsPage'
+import ResultsHistory from './components/ResultsHistory'
 import ProtectedRoute from './components/ProtectedRoute'
 import PublicRoute from './components/PublicRoute'
 
@@ -44,6 +45,14 @@ export default function App() {
           element={
             <ProtectedRoute>
               <ParseScreen />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/results"
+          element={
+            <ProtectedRoute>
+              <ResultsHistory />
             </ProtectedRoute>
           }
         />
