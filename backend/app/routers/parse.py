@@ -3,14 +3,18 @@ import json
 import time
 from typing import List, Optional
 
-from fastapi import APIRouter, File, UploadFile, HTTPException
+from fastapi import APIRouter, File, UploadFile, HTTPException, Depends
+from sqlalchemy.orm import Session
 
 from app.models.schemas import ParseResponse, ParseResultItem, DocumentMeta, Position
+from app.models.db_models import ParseResult, User
 from app.services.pdf_parser import PDFParser
 from app.services.matcher import find_matches, compute_confidence
 from app.utils.spec_section import SectionResolver
 from app.utils.text import normalize_text_with_mapping, window
 from app.utils.keywords import SNIPPET_WINDOW, PROXIMITY_CHAR_WINDOW
+from app.utils.auth import get_current_user
+from app.database import get_db
 
 router = APIRouter()
 
@@ -18,6 +22,8 @@ router = APIRouter()
 async def parse(
     file: UploadFile = File(...),
     save: bool = False,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db),
 ):
     if file.content_type not in ("application/pdf", "application/octet-stream"):
         raise HTTPException(status_code=400, detail="File must be a PDF")
@@ -72,6 +78,29 @@ async def parse(
     total_matches = len(results)
     filename = file.filename or "document.pdf"
 
+    result_id = None
+
+    # Save to database if requested
+    if save:
+        # Convert results to JSON string for storage
+        results_json = json.dumps([result.model_dump() for result in results])
+        
+        # Create ParseResult record
+        db_parse_result = ParseResult(
+            user_id=current_user.id,
+            filename=filename,
+            num_pages=num_pages,
+            parse_time_ms=elapsed_ms,
+            total_matches=total_matches,
+            matched_pages=matched_pages,
+            results_json=results_json,
+        )
+        
+        db.add(db_parse_result)
+        db.commit()
+        db.refresh(db_parse_result)
+        result_id = db_parse_result.id
+
     response = ParseResponse(
         document=DocumentMeta(
             filename=filename,
@@ -84,14 +113,7 @@ async def parse(
             "total_matches": total_matches,
             "keywords_used": None,
         },
-        result_id=None,
+        result_id=result_id,
     )
-
-    # Save to database if requested (requires authentication - disabled for now)
-    # TODO: Re-enable when authentication is implemented
-    if save:
-        # For now, saving is disabled until auth is implemented
-        # When auth is ready, uncomment and add back the auth dependencies above
-        pass
 
     return response

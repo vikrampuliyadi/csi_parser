@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { getToken, removeToken } from '../utils/auth'
+import { saveToLocalStorage } from '../utils/results'
+import type { ParseResponse } from '../types'
 import '../styles/ParseScreen.css'
 
 const API_BASE = (import.meta as any).env.VITE_API_BASE || 'http://127.0.0.1:8000/api/v1'
@@ -15,7 +17,6 @@ export default function ParseScreen() {
   const [file, setFile] = useState<File | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [result, setResult] = useState<any>(null)
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0]
@@ -26,7 +27,6 @@ export default function ParseScreen() {
     if (!file) return
     setLoading(true)
     setError(null)
-    setResult(null)
     try {
       const token = getToken()
       const form = new FormData()
@@ -35,7 +35,8 @@ export default function ParseScreen() {
       if (token) {
         headers['Authorization'] = `Bearer ${token}`
       }
-      const res = await fetch(`${API_BASE}/parse`, {
+      // Add save=true query parameter to automatically save the result
+      const res = await fetch(`${API_BASE}/parse?save=true`, {
         method: 'POST',
         headers,
         body: form,
@@ -44,8 +45,16 @@ export default function ParseScreen() {
         const text = await res.text()
         throw new Error(`${res.status} ${text}`)
       }
-      const json = await res.json()
-      setResult(json)
+      const json: ParseResponse = await res.json()
+
+      // If result was saved, save to localStorage and navigate to results page
+      if (json.result_id) {
+        saveToLocalStorage(json.result_id, json)
+        navigate(`/results/${json.result_id}`)
+      } else {
+        // Fallback: if somehow result_id is missing, show error
+        setError('Failed to save result. Please try again.')
+      }
     } catch (e: any) {
       setError(e?.message || 'Failed to parse')
     } finally {
@@ -57,12 +66,20 @@ export default function ParseScreen() {
     <div className="parse-container">
       <div className="parse-header">
         <h1>CSI Parse</h1>
-        <button
-          onClick={handleLogout}
-          className="parse-logout-button"
-        >
-          Logout
-        </button>
+        <div className="parse-header-actions">
+          <button
+            onClick={() => navigate('/results')}
+            className="parse-results-button"
+          >
+            View Results
+          </button>
+          <button
+            onClick={handleLogout}
+            className="parse-logout-button"
+          >
+            Logout
+          </button>
+        </div>
       </div>
       <div className="parse-controls">
         <input type="file" accept="application/pdf" onChange={onChange} />
@@ -72,11 +89,6 @@ export default function ParseScreen() {
         {file && <span>{file.name}</span>}
       </div>
       {error && <div className="parse-error">{error}</div>}
-      {result && (
-        <pre className="parse-result">
-          {JSON.stringify(result, null, 2)}
-        </pre>
-      )}
     </div>
   )
 }

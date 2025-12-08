@@ -10,6 +10,7 @@ from app.database import init_db
 from app.routers.health import router as health_router
 from app.routers.parse import router as parse_router
 from app.routers.auth import router as auth_router
+from app.routers.results import router as results_router
 
 app = FastAPI(title='CSI Parse API', version='0.1.0')
 
@@ -29,3 +30,4 @@ async def startup_event():
 app.include_router(health_router, prefix='/api/v1')
 app.include_router(auth_router, prefix='/api/v1')
 app.include_router(parse_router, prefix='/api/v1')
+app.include_router(results_router, prefix='/api/v1')
