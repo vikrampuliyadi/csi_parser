@@ -2,41 +2,111 @@ import React, { useState, useMemo } from 'react'
 import type { ParseResultItem } from '../types'
 import '../styles/ResultsTable.css'
 
-type SortField = 'keyword' | 'page' | 'confidence' | 'match_type' | 'spec_section'
+type SortField = 'page' | 'spec_section'
 type SortDirection = 'asc' | 'desc'
 
 interface ResultsTableProps {
   results: ParseResultItem[]
 }
 
-const SNIPPET_MAX_LENGTH = 100
+/**
+ * Splits text into sentences and highlights the sentence containing the keyword
+ * @param contextWindow - The full context text
+ * @param keyword - The keyword to search for
+ * @returns JSX element with sentences, where the matching sentence is highlighted
+ */
+function highlightSentenceWithKeyword(contextWindow: string, keyword: string): React.JSX.Element {
+  // Split text into sentences using regex that matches sentence endings followed by whitespace
+  // This handles: period, exclamation, question mark, and multiple spaces/newlines
+  // Split on sentence boundaries while keeping the punctuation
+  const sentenceRegex = /([.!?]+)\s+/g
+  const sentences: string[] = []
+
+  // Use matchAll to find all sentence boundaries
+  const matches = Array.from(contextWindow.matchAll(sentenceRegex))
+
+  if (matches.length === 0) {
+    // No sentence boundaries found, treat entire text as one sentence
+    sentences.push(contextWindow.trim())
+  } else {
+    // Extract sentences between boundaries
+    let lastIndex = 0
+    for (const match of matches) {
+      const sentenceEnd = match.index! + match[0].length
+      const sentence = contextWindow.substring(lastIndex, sentenceEnd).trim()
+      if (sentence) {
+        sentences.push(sentence)
+      }
+      lastIndex = sentenceEnd
+    }
+
+    // Add the remaining text as the last sentence
+    if (lastIndex < contextWindow.length) {
+      const remaining = contextWindow.substring(lastIndex).trim()
+      if (remaining) {
+        sentences.push(remaining)
+      }
+    }
+  }
+
+  // Find the sentence containing the keyword (case-insensitive)
+  const keywordLower = keyword.toLowerCase()
+  const matchingSentenceIndex = sentences.findIndex(sentence =>
+    sentence.toLowerCase().includes(keywordLower)
+  )
+
+  // Render sentences with highlighting
+  return (
+    <div className="paragraph-display">
+      {sentences.map((sentence, index) => {
+        const isHighlighted = index === matchingSentenceIndex
+        return (
+          <span
+            key={index}
+            className={isHighlighted ? 'highlighted-sentence' : 'sentence'}
+          >
+            {sentence}
+            {index < sentences.length - 1 && ' '}
+          </span>
+        )
+      })}
+    </div>
+  )
+}
 
 export default function ResultsTable({ results }: ResultsTableProps) {
   const [sortField, setSortField] = useState<SortField | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
   const [filters, setFilters] = useState({
-    keyword: '',
     page: '',
-    matchType: '',
   })
+
+  // Deduplicate results - entries with same page, section, and section_hint are considered duplicates
+  const uniqueResults = useMemo(() => {
+    const seen = new Set<string>()
+    const unique: ParseResultItem[] = []
+
+    for (const result of results) {
+      const key = `${result.page}|${result.spec_section || ''}|${result.section_hint || ''}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        unique.push(result)
+      }
+    }
+
+    return unique
+  }, [results])
 
   // Filter results
   const filteredResults = useMemo(() => {
-    return results.filter((result) => {
-      const matchesKeyword = !filters.keyword || 
-        result.keyword.toLowerCase().includes(filters.keyword.toLowerCase()) ||
-        result.snippet.toLowerCase().includes(filters.keyword.toLowerCase())
-      
-      const matchesPage = !filters.page || 
+    return uniqueResults.filter((result) => {
+      const matchesPage = !filters.page ||
         result.page.toString() === filters.page
-      
-      const matchesMatchType = !filters.matchType || 
-        result.match_type === filters.matchType
-      
-      return matchesKeyword && matchesPage && matchesMatchType
+
+      return matchesPage
     })
-  }, [results, filters])
+  }, [uniqueResults, filters])
 
   // Sort results
   const sortedResults = useMemo(() => {
@@ -47,21 +117,9 @@ export default function ResultsTable({ results }: ResultsTableProps) {
       let bValue: string | number
 
       switch (sortField) {
-        case 'keyword':
-          aValue = a.keyword.toLowerCase()
-          bValue = b.keyword.toLowerCase()
-          break
         case 'page':
           aValue = a.page
           bValue = b.page
-          break
-        case 'confidence':
-          aValue = a.confidence
-          bValue = b.confidence
-          break
-        case 'match_type':
-          aValue = a.match_type
-          bValue = b.match_type
           break
         case 'spec_section':
           aValue = a.spec_section || ''
@@ -102,11 +160,6 @@ export default function ResultsTable({ results }: ResultsTableProps) {
     setExpandedRows(newExpanded)
   }
 
-  const truncateSnippet = (text: string): string => {
-    if (text.length <= SNIPPET_MAX_LENGTH) return text
-    return text.substring(0, SNIPPET_MAX_LENGTH) + '...'
-  }
-
   const getSortIcon = (field: SortField) => {
     if (sortField !== field) return '⇅'
     return sortDirection === 'asc' ? '↑' : '↓'
@@ -117,13 +170,6 @@ export default function ResultsTable({ results }: ResultsTableProps) {
       {/* Filters */}
       <div className="results-table-filters">
         <input
-          type="text"
-          placeholder="Filter by keyword..."
-          value={filters.keyword}
-          onChange={(e) => setFilters({ ...filters, keyword: e.target.value })}
-          className="results-filter-input"
-        />
-        <input
           type="number"
           placeholder="Filter by page..."
           value={filters.page}
@@ -131,18 +177,8 @@ export default function ResultsTable({ results }: ResultsTableProps) {
           className="results-filter-input"
           min="1"
         />
-        <select
-          value={filters.matchType}
-          onChange={(e) => setFilters({ ...filters, matchType: e.target.value })}
-          className="results-filter-select"
-        >
-          <option value="">All match types</option>
-          <option value="exact">Exact</option>
-          <option value="regex">Regex</option>
-          <option value="fuzzy">Fuzzy</option>
-        </select>
         <button
-          onClick={() => setFilters({ keyword: '', page: '', matchType: '' })}
+          onClick={() => setFilters({ page: '' })}
           className="results-filter-clear"
         >
           Clear Filters
@@ -151,7 +187,7 @@ export default function ResultsTable({ results }: ResultsTableProps) {
 
       {/* Results count */}
       <div className="results-table-info">
-        Showing {sortedResults.length} of {results.length} results
+        Showing {sortedResults.length} of {uniqueResults.length} unique results
       </div>
 
       {/* Table */}
@@ -161,82 +197,42 @@ export default function ResultsTable({ results }: ResultsTableProps) {
             <tr>
               <th
                 className="results-table-header sortable"
-                onClick={() => handleSort('keyword')}
-              >
-                Keyword {getSortIcon('keyword')}
-              </th>
-              <th
-                className="results-table-header sortable"
                 onClick={() => handleSort('page')}
               >
                 Page {getSortIcon('page')}
               </th>
-              <th className="results-table-header">Snippet</th>
               <th
                 className="results-table-header sortable"
                 onClick={() => handleSort('spec_section')}
               >
                 Section {getSortIcon('spec_section')}
               </th>
-              <th
-                className="results-table-header sortable"
-                onClick={() => handleSort('confidence')}
-              >
-                Confidence {getSortIcon('confidence')}
-              </th>
-              <th
-                className="results-table-header sortable"
-                onClick={() => handleSort('match_type')}
-              >
-                Match Type {getSortIcon('match_type')}
-              </th>
+              <th className="results-table-header">Section Hint</th>
               <th className="results-table-header">Actions</th>
             </tr>
           </thead>
           <tbody>
             {sortedResults.length === 0 ? (
               <tr>
-                <td colSpan={7} className="results-table-empty">
+                <td colSpan={4} className="results-table-empty">
                   No results found
                 </td>
               </tr>
             ) : (
               sortedResults.map((result, index) => {
                 const isExpanded = expandedRows.has(index)
-                const snippet = isExpanded 
-                  ? result.snippet 
-                  : truncateSnippet(result.snippet)
 
                 return (
                   <React.Fragment key={index}>
                     <tr className={isExpanded ? 'expanded' : ''}>
-                      <td className="results-table-cell keyword-cell">
-                        {result.keyword}
-                      </td>
                       <td className="results-table-cell page-cell">
                         {result.page}
                       </td>
-                      <td className="results-table-cell snippet-cell">
-                        {snippet}
-                        {result.snippet.length > SNIPPET_MAX_LENGTH && (
-                          <button
-                            onClick={() => toggleRow(index)}
-                            className="results-expand-button"
-                          >
-                            {isExpanded ? 'Show less' : 'Show more'}
-                          </button>
-                        )}
-                      </td>
                       <td className="results-table-cell section-cell">
-                        {result.spec_section || result.section_hint || '-'}
+                        {result.spec_section || '-'}
                       </td>
-                      <td className="results-table-cell confidence-cell">
-                        {(result.confidence * 100).toFixed(1)}%
-                      </td>
-                      <td className="results-table-cell match-type-cell">
-                        <span className={`match-type-badge match-type-${result.match_type}`}>
-                          {result.match_type}
-                        </span>
+                      <td className="results-table-cell section-hint-cell">
+                        {result.section_hint || '-'}
                       </td>
                       <td className="results-table-cell actions-cell">
                         <button
@@ -250,37 +246,40 @@ export default function ResultsTable({ results }: ResultsTableProps) {
                     </tr>
                     {isExpanded && (
                       <tr className="results-table-expanded-row">
-                        <td colSpan={7} className="results-table-expanded-content">
+                        <td colSpan={4} className="results-table-expanded-content">
                           <div className="expanded-content-section">
-                            <h4>Full Context</h4>
-                            <div className="context-block">
-                              <strong>Before:</strong>
-                              <div className="context-text">{result.context_before}</div>
+                            {/* Section Header */}
+                            <div className="section-header">
+                              <h3 className="section-title">
+                                {result.spec_section || result.section_hint || 'No Section'}
+                              </h3>
                             </div>
-                            <div className="context-block">
-                              <strong>Snippet:</strong>
-                              <div className="context-text snippet-highlight">{result.snippet}</div>
-                            </div>
-                            <div className="context-block">
-                              <strong>After:</strong>
-                              <div className="context-text">{result.context_after}</div>
+
+                            {/* Full Paragraph with Highlighted Sentence */}
+                            <div className="paragraph-container">
+                              {highlightSentenceWithKeyword(result.context_window, result.keyword)}
                             </div>
                           </div>
+
+                          {/* Additional Info */}
                           <div className="expanded-content-section">
                             <h4>Additional Info</h4>
                             <div className="info-grid">
                               <div>
-                                <strong>Section Hint:</strong> {result.section_hint || '-'}
+                                <strong>Keyword:</strong> {result.keyword}
                               </div>
                               <div>
-                                <strong>Spec Section:</strong> {result.spec_section || '-'}
+                                <strong>Page:</strong> {result.page}
                               </div>
                               <div>
-                                <strong>Positions:</strong> {result.positions.length} match(es)
+                                <strong>Confidence:</strong> {(result.confidence * 100).toFixed(1)}%
                               </div>
-                              {result.proximity_window && (
+                              <div>
+                                <strong>Match Type:</strong> {result.match_type}
+                              </div>
+                              {result.section_hint && result.spec_section && (
                                 <div>
-                                  <strong>Proximity Window:</strong> {result.proximity_window}
+                                  <strong>Section Hint:</strong> {result.section_hint}
                                 </div>
                               )}
                             </div>

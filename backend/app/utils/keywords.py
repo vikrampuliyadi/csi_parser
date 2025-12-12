@@ -12,13 +12,13 @@ KEYWORDS = [
 ]
 
 REGEX_PATTERNS = [
-    r"\bprofessional\s+engineer(s)?\b",
-    r"\bregistered\s+engineer(s)?\b",
-    r"\b(structural|civil)\s+engineer(s)?\b",
-    r"\b(seal(ed)?|stamp(ed)?)\s+by\b",
-    r"\bengineer\s+of\s+record\b",
-    r"\blicensed\s+engineer(s)?\b",
-    r"\bpe\s+(seal|stamp|registration)\b",
+    # r"\bprofessional\s+engineer(s)?\b",
+    # r"\bregistered\s+engineer(s)?\b",
+    # r"\b(structural|civil)\s+engineer(s)?\b",
+    # r"\b(seal(ed)?|stamp(ed)?)\s+by\b",
+    # r"\bengineer\s+of\s+record\b",
+    # r"\blicensed\s+engineer(s)?\b",
+    # r"\bpe\s+(seal|stamp|registration)\b",
 ]
 
 ANCHOR_TERMS = [

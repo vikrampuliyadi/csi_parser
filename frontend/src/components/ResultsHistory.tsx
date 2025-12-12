@@ -145,12 +145,6 @@ export default function ResultsHistory() {
                 </div>
                 <div className="results-history-item-stats">
                   <div className="results-history-stat">
-                    <span className="results-history-stat-label">Total Matches:</span>
-                    <span className="results-history-stat-value">
-                      {result.total_matches}
-                    </span>
-                  </div>
-                  <div className="results-history-stat">
                     <span className="results-history-stat-label">Matched Pages:</span>
                     <span className="results-history-stat-value">
                       {result.matched_pages} / {result.num_pages}

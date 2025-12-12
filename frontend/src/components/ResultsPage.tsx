@@ -78,6 +78,18 @@ export default function ResultsPage() {
     return `${(ms / 1000).toFixed(2)}s`
   }
 
+  // Calculate unique matches based on page, section, and section_hint
+  const getUniqueMatchesCount = (results: ParseResultDetail['results']): number => {
+    const seen = new Set<string>()
+    for (const result of results) {
+      const key = `${result.page}|${result.spec_section || ''}|${result.section_hint || ''}`
+      if (!seen.has(key)) {
+        seen.add(key)
+      }
+    }
+    return seen.size
+  }
+
   if (loading) {
     return (
       <div className="results-page-container">
@@ -164,8 +176,8 @@ export default function ResultsPage() {
             <span className="metadata-value">{result.num_pages}</span>
           </div>
           <div className="metadata-item">
-            <span className="metadata-label">Total Matches:</span>
-            <span className="metadata-value">{result.total_matches}</span>
+            <span className="metadata-label">Unique Matches:</span>
+            <span className="metadata-value">{getUniqueMatchesCount(result.results)}</span>
           </div>
           <div className="metadata-item">
             <span className="metadata-label">Matched Pages:</span>
@@ -184,7 +196,7 @@ export default function ResultsPage() {
 
       {/* Results Table */}
       <div className="results-page-content">
-        <h2>Matches ({result.results.length})</h2>
+        <h2>Matches ({getUniqueMatchesCount(result.results)})</h2>
         {result.results.length > 0 ? (
           <ResultsTable results={result.results} />
         ) : (
